@@ -5,3 +5,4 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(daytimetcpcli daytimetcpcli.cpp)
 add_executable(daytimetcpsrv daytimetcpsrv.cpp)
+add_executable(byteorder byteorder.cpp)

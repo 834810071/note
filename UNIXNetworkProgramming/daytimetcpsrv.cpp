@@ -11,6 +11,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <cstring>
+#include <arpa/inet.h>
 
 #define ERR_EXIT(m) \
         do \
@@ -53,7 +54,9 @@ int main()
         {
             ERR_EXIT("accept");
         }
-
+        printf("connection from %s, port %d\n",
+                inet_ntop(AF_INET, &peeraddr.sin_addr, buf, sizeof buf),
+                ntohs(peeraddr.sin_port));
         time_t t = time(NULL);
         snprintf(buf, sizeof buf, "%.24s\r\n", ctime(&t));
         if (write(connfd, buf,  strlen(buf)) < 0)

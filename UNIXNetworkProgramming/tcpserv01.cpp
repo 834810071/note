@@ -22,7 +22,7 @@ using namespace std;
             exit(EXIT_FAILURE); \
         } while (0);
 
-void str_echo(int connfd)
+void str_echo00(int connfd)
 {
     char recv[1024];
     int n;
@@ -31,9 +31,76 @@ again:
     while ((n = read(connfd, recv, sizeof(recv))) != 0)
     {
         printf("msg: %s", recv);
+        write(connfd, recv, n);
+        memset(recv, 0, sizeof recv);
+    }
+    if (n < 0 && errno == EINTR)
+    {
+        goto again;
+    }
+    else
+    {
+        exit(0);
+    }
+}
+
+void str_echo01(int connfd)
+{
+    char recv[1024];
+    int n;
+    memset(recv, 0, sizeof recv);
+    int a, b;
+    again:
+    while ((n = read(connfd, recv, sizeof(recv))) != 0)
+    {
+        printf("msg: %s", recv);
+        if (sscanf(recv, "%d%d", &a, &b) != 2)
+        {
+            ERR_EXIT("sscanf");
+        }
+        snprintf(recv, sizeof recv, "%d\n", a+b);
+
         write(connfd, recv, sizeof recv);
         memset(recv, 0, sizeof recv);
     }
+
+    if (n < 0 && errno == EINTR)
+    {
+        goto again;
+    }
+    else
+    {
+        exit(0);
+    }
+}
+
+struct args
+{
+    long num1;
+    long num2;
+};
+
+struct result
+{
+    long res;
+};
+
+void str_echo02(int connfd)
+{
+    char recv[1024];
+    int n;
+    memset(recv, 0, sizeof recv);
+    int a, b;
+    args args1;
+    again:
+    while ((n = read(connfd, &args1, sizeof(args1))) != 0)
+    {
+        printf("msg: %ld, %ld\n", args1.num1, args1.num2);
+        result res;
+        res.res = args1.num1 + args1.num2;
+        write(connfd, &res, sizeof res);
+    }
+
     if (n < 0 && errno == EINTR)
     {
         goto again;
@@ -68,7 +135,11 @@ int main()
     sockAddr.sin_family = AF_INET;
     sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     sockAddr.sin_port = htons(9981);
-
+    int on = 1;
+    if ((setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int))) < 0)
+    {
+        ERR_EXIT("setsockopt");
+    }
     if (bind(listenfd, (struct sockaddr*)&sockAddr, socklen) < 0)
     {
         ERR_EXIT("bind");
@@ -93,7 +164,7 @@ int main()
         if ((pid = fork()) == 0)
         {
             close(listenfd);
-            str_echo(connfd);
+            str_echo00(connfd);
             exit(0);
         }
         close(connfd);

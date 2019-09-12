@@ -227,3 +227,150 @@ pid_t waitpid(pid_t pid, int *statloc, int options);
 >> 函数wait和waitpid均返回两个值：已终止子进程进程ID号，以及通过statloc指针返回的子进程终止状态。
 
 ## 5.12 [服务器进程终止](https://blog.csdn.net/tiankong_/article/details/75116174)
+
+## 5.13 SIGPIPE信号
+>> 当一个进程向某个已收到RST的套接字执行写操作时，内核向该进程发送一个SIGPIPE信号。该信号的默认行为是终止进程，因此进程必须捕获它以免不情愿地被终止。不论该进程是捕获了该信号并从其信号处理函数返回，还是简单地忽略该信号，写操作都将返回EPIPE错误。
+
+# 第6章 I/O复用：select和poll函数
+
+## 6.2 I/O模型
+>> UNIX下可用的五种I/O模型：   
+>> * 阻塞式I/O；
+>> * 非阻塞式I/O；
+>> * I/O复用(select和poll)； 
+>> * 信号驱动式I/O(SIGIO)；
+>> * 异步I/O(POSIX的aio_列函数)。  
+
+>> 对于一个套接字上的输入操作，第一步通常涉及等待数据从网络中到达。当所等待分组到达时，它被复制到内核中的某个缓冲区。第二步就是把数据从内核缓冲区复制到应用进程缓冲区。  
+
+### 6.2.2 非阻塞式I/O模型
+>> 进程把一个套接字设置成非阻塞是在通知内核：当所请求的I/O操作非得把本进程投入睡眠才能完成时，不要把本进程投入睡眠，而是返回一个错误。  
+
+### 6.2.5 异步I/O模型
+>>信号驱动式I/O是有内核通知我们何时可以启动一个I/O操作，而异步I/O模型是由内核通知我们I/O操作何时完成。   
+## 6.3 select函数
+>> 该函数允许进程指示内核等待多个事件中的任何一个发生，并只在有一个或多个事件发生或经历一段指定的时间后才可以唤醒它。   
+```cpp
+/* According to POSIX.1-2001, POSIX.1-2008 */
+#include <sys/select.h>
+
+/* According to earlier standards */
+#include <sys/time.h>
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+
+void FD_CLR(int fd, fd_set *set);
+int  FD_ISSET(int fd, fd_set *set);
+void FD_SET(int fd, fd_set *set);
+void FD_ZERO(fd_set *set);
+```
+
+### 6.3.1 [描述符就绪条件](https://www.abcode.club/archives/346)
+
+## 6.6 shutdown函数
+>> close有两个限制:  
+>> (1) close把描述符的引用计数减1，仅在该计数变为0时才关闭套接字。   
+>> (2) close终止读和写两个方向的数据传送。
+
+## 6.10 poll函数
+```cpp
+#include <poll.h>
+
+int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+
+struct pollfd {
+               int   fd;         /* file descriptor */
+               short events;     /* requested events */
+               short revents;    /* returned events */
+              };
+```
+
+>> poll识别三类数据：普通(normal)、优先级带(priority band)和高优先级(high priority)。
+
+>>POSIX在其poll的定义中留了许多空洞（也就是说有多种方法可返回相同的条件）。     
+  （1）所有正规TCP数据和所有UDP数据都被认为是普通数据。     
+  （2）TCP的带外数据被认为是优先级数据。     
+  （3）当TCP连接的读这一半关闭时（例如收到了一个来自对端的FIN），也被认为是普通数据，随后的读操作将返回0.    
+  （4）TCP连接存在错误既可认为是普通数据，也可认为是错误（POLLERR），无论哪种情况，随后的读操作将返回-1，并把errno设置成合适的值。这可用于处理诸如接收到RST或超时发生等条件。    
+  （5）在监听套接口上有新的连接可用既可认为是普通数据，也可认为是优先级数据。大多数实现视之为普通数据。     
+  （6）非阻塞式connect的完成被认为使得相应套接口可写。   
+  
+# 第7章 套接字选项
+## 7.2 getsockopt和setsockopt函数
+```cpp
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
+
+int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen);
+int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+```
+
+后面感觉看了也记不住，就不看了。。。
+
+# 第8章 基本UDP套接字编程
+## 8.2 recvfrom和sendto函数
+```cpp
+#inlude<sys/socket.h>
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
+```
+## 8.9 服务器进程未运行
+>> 一个基本规则是：对于一个UDP套接字，由它引发的异步错误并不返回给它，除非它已连接。   
+>> 仅在进程已将其UDP套接字连接到恰恰一个对端后，这些异步错误才返回给进程。 
+## 8.11 UDP的connect函数
+>> 对于已连接UDP套接字，与默认的未连接UDP套接字相比，发生了三个变化。   
+>> (1) 再也不能给输出操作指定目的的IP地址和端口号。    
+>> (2) 不必使用recvfrom以获悉数据报的发送者，而改用read、recv或recvmsg。    
+>> (3) 由已连接UDP套接字引发的错误会返回给它们所在的进程，而未连接的UDP套接字不接收任何异步错误。    
+
+>> UDP客户进程或服务器进程只在使用自己的UDP套接字与确定的唯一对端进行通信时，才可以调用connect。   
+
+### 8.11.1 给一个UDP套接字多次调用connect
+>> 拥有一个已连接UDP套接字的进程可出于以下两个目的再次调用connect:
+>> * 指定新的IP地址和端口号；
+>> * 断开套接字。
+
+### 8.11.2 性能
+>> 在一个未连接的UDP套接字上给两个数据报调用sendto函数于是涉及内核执行下列6个步骤： 
+>> * 连接套接字；
+>> * 输出第一个数据报；
+>> * 断开套接字连接；
+>> * 连接套接字；
+>> * 输出第二个数据报；
+>> * 断开套接字连接。
+
+>> 调用connect后：
+>> * 连接套接字；
+>> * 输出第一个套接字；
+>> * 输出第二个套接字。
+
+# 第11章 名字与地址转换
+## 11.2 域名系统
+>> 域名系统(Domain Name System，DNS)主要用于主机名字与IP地址之间的映射。
+
+## 11.3 gethostbyname函数
+>> 查找主机名[IPv4]。
+```cpp
+#include <netdb.h>
+
+struct hostent *gethostbyname(const char *name);
+
+struct hostent {
+    char  *h_name;            /* official name of host */
+    char **h_aliases;         /* alias list */
+    int    h_addrtype;        /* host address type */
+    int    h_length;          /* length of address */
+    char **h_addr_list;       /* list of addresses */
+}
+
+```
+
+后面感觉看了也记不住，就不看了。。。
+
+# 第14章 高级I/O函数
+## 14.2 套接字超时
+>>在涉及套接字的I/O操作上设置超时的方法有以下3种。   
+>> (1) 调用alarm，它在指定超时期满式时产生SIGALARM信号。   
+>> (2) 早select中阻塞等待I/O，以此代替直接阻塞在read或write调用上。   
+>> (3) 使用较新的SO_RCVTIMEO和SO_SNDTIMEO套接字选项。   
+

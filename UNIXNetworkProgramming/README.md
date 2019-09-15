@@ -374,3 +374,135 @@ struct hostent {
 >> (2) 早select中阻塞等待I/O，以此代替直接阻塞在read或write调用上。   
 >> (3) 使用较新的SO_RCVTIMEO和SO_SNDTIMEO套接字选项。   
 
+## 14.3 recv和send函数
+>> 这两个函数类似标准的read和write函数，不过需要一个额外的参数。
+```cpp
+#include <sys/types.h>
+#include <sys/socket.h>
+
+ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+```
+
+## 14.4 readv和writev函数
+>> 这两个函数类似read和write，不过readv和writev允许单个系统调用读入或写出一个或多个缓冲区。这种操作被称为分散读(scatter read)或集中写(gather write)。
+```cpp
+#include <sys/uio.h>
+
+ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
+
+ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+
+struct iovec {
+    void  *iov_base;    /* Starting address */
+    size_t iov_len;     /* Number of bytes to transfer */
+};
+```
+## 14.5 recvmsg和sendmsg函数
+```cpp 
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+```
+
+# 第15章 Unix域协议
+## 15.1 概述 
+>> Unix域提供两类套接字：字节流套接字(类似TCP)和数据报套接字(类似DUP)。   
+>> 使用Unix域套接字有以下3个理由。  
+>> (1) Unix域套接字往往比通信两端位于同一个主机的TCP套接字快出一倍。   
+>> (2) Unix域套接字可用于在同一个主机上的不同进程之间传递描述符。   
+>> (3) Unix域套接字较新的实现把客户的凭证(用户ID和组ID)提供给服务器，从而能够提供额外的安全检查措施。  
+##  15.2 Unix域套接字地址结构
+```cpp
+struct sockaddr_un {
+    sa_family_t sun_family; /*AF_LOCAL*/
+    char        sun_path[104];  /*null-terminated pathname*/
+}
+```
+
+发现这章没怎么用就不看了。。。
+
+# 第16章 非阻塞式I/O
+## 16.1 概述
+>> 套接字的默认状态是阻塞的。可能阻塞的套接字可分为以下四类。   
+>> (1) 输入操作，包括read、readv、recv、recvfrom和recvmsg等5个函数。    
+>> (2) 输出操作，包括write、writev、send、sendto和sendmsg共5个函数。内核将从应用进程的缓冲区到该套接字的发送缓冲区复制数据。        
+>> (3) 接收外来连接，即accept函数。
+>> (4) 发起外出链接，即用于TCP的connect函数。
+
+## 16.3 非阻塞connect
+>> 非阻塞connect有三个用途。    
+>> (1) 可以把三路握手叠加在其他处理上。   
+>> (2) 同时建立多个连接。        
+>> (3) 给Select指定一个时间限制，缩短connect的超时。   
+  
+>> select和非阻塞connect: (1) 当连接建立成功时，描述符变为可写；(2)当连接建立遇到错误时，描述符变为既可读又可写。    
+
+>> 避免移植性问题的一个较简单的技术是为每个连接创建一个处理线程。    
+
+# 第26章 线程
+## 26.1 概述
+>> 同一进程内的所有线程除了共享全局变量外还共享： 
+>> * 进程指令
+>> * 大多数数据 
+>> * 打开的文件
+>> * 信号处理函数和信号处置
+>> * 当前用户目录  
+>> * 用户ID和组ID
+
+>> 每个线程有各自的：  
+>> * 线程ID
+>> * 寄存器集合，包括程序计数器和栈指针
+>> * 栈(用于存放局部变量和返回地址)
+>> * errno
+>> * 信号掩码
+>> * 优先级
+
+## 26.2 基本线程函数：创建和终止
+### 26.2.1 pthread_create函数
+```cpp
+ #include <pthread.h>
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg);
+```
+
+### 26.2.2 pthread_join函数
+### 26.2.3 pthread_self函数
+### 26.2.4 pthread_detach函数
+### 26.2.5 pthread_exit函数
+
+### 26.5线程特定数据
+```cpp
+#include <pthread.h>
+
+int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+int pthread_key_create(pthread_key_t *key, void (*destructor)(void*));
+```
+
+## 26.7 互斥锁
+```cpp
+#include <pthread.h>
+
+int pthread_mutex_lock(pthread_mutex_t *mutex);
+int pthread_mutex_trylock(pthread_mutex_t *mutex);
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
+```
+
+## 26.8 条件变量
+```cpp
+int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex);
+int pthread_cond_signal(pthread_cond_t *cond);
+
+int pthread_cond_broadcast(pthread_cond_t *cond);
+int pthread_cond_timedwait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex, const struct timespec *restrict abstime);
+```
+
+# 第30章 客户/服务器程序设计范式
+>> 当开发一个Unix服务器程序时，有如下类型的进程控制选择：   
+>> * 迭代式服务器(iterative server)程序
+>> * 并发服务器(concurrent server)程序 
+>> * select处理任意多个客户的单个进程
+>> * 为每个客户创建一个线程
+
+>> 并发服务器的两类变体。
+>> * 预先派生子进程(preforking)是让服务器在启动阶段调用fork创建一个子进程池。
+>> * 预先创建线程(prethreading)是让服务器在启动阶段创建一个线程池。

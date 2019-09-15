@@ -120,6 +120,15 @@ void sig_chld(int singo)
     return;
 }
 
+static
+void *doit(void* arg)
+{
+    pthread_detach(pthread_self());
+    str_echo00(*((int*)arg));
+    close(*((int*)arg));
+    return NULL;
+}
+
 int main()
 {
     int listenfd, connfd;
@@ -154,6 +163,7 @@ int main()
     socklen_t peerlen;
     pid_t pid;
     signal(SIGCHLD, sig_chld);
+    pthread_t tid;
     while (true)
     {
         if ((connfd = accept(listenfd, (struct sockaddr*)&peerAddr, &peerlen)) < 0)
@@ -161,13 +171,14 @@ int main()
             ERR_EXIT("accept");
         }
 
-        if ((pid = fork()) == 0)
-        {
-            close(listenfd);
-            str_echo00(connfd);
-            exit(0);
-        }
-        close(connfd);
+        pthread_create(&tid, NULL, &doit, (void *)&connfd);
+//        if ((pid = fork()) == 0)
+//        {
+//            close(listenfd);
+//            str_echo00(connfd);
+//            exit(0);
+//        }
+        //close(connfd);
     }
 
 

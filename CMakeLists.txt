@@ -4,6 +4,7 @@ project(node)
 set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(UNIXNetworkProgramming)
+add_subdirectory(InsideTheC++ObjectModel)
 
 add_executable(main main.cpp)
 

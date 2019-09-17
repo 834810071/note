@@ -50,3 +50,15 @@ if (circle *pc = dynamic_cast<circle*>(ps)) ...
 >>枚举变量的大小，实质是常数所占内存空间的大小，大小为4(int)。
 
 [关于C++中的虚拟继承的一些总结](https://www.cnblogs.com/BeyondAnyTime/archive/2012/06/05/2537451.html)
+
+# 第2章 构造函数语意学(The Semantics of Constructors)
+## 2.1 Default Constructor的建构操作
+**带有Default Constructor的Member Class Object**
+**带有Default Constructor的Base Class**
+**带有一个Virtual Function的Class**
+**带有一个Virtual Base Class的Class**
+
+## 2.2 [Copy Constructor的建构操作](https://zcheng.ren/2016/08/08/cppobjectmodelpart4/)
+
+书太难了，看不懂，选择看博客重点了。。。
+[《深度探索C++对象模型》笔记汇总](http://www.roading.org/develop/cpp/%E3%80%8A%E6%B7%B1%E5%BA%A6%E6%8E%A2%E7%B4%A2c%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B%E3%80%8B%E7%AC%94%E8%AE%B0%E6%B1%87%E6%80%BB.html)

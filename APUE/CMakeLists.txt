@@ -10,5 +10,6 @@ add_executable(file file.cpp)
 add_executable(3-4 3-4.cpp)
 add_executable(4-1 4-1.cpp)
 add_executable(4-5 4-5.cpp)
+add_executable(8-1 8-1.cpp)
 
 target_link_libraries(myls apue)

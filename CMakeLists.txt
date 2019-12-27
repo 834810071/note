@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 add_subdirectory(UNIXNetworkProgramming)
 add_subdirectory(InsideTheC++ObjectModel)
 add_subdirectory(APUE)
+add_subdirectory(c++11_14_17新增特性)
 
 add_executable(main main.cpp)
 

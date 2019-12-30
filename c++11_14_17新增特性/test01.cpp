@@ -4,13 +4,17 @@
 
 #include <iostream>
 
-[[deprecated("use funcY instead")]] void funcx()
+class A final
 {
-    // 实现省略...
-}
+
+};
+
+class B : A
+{
+
+};
 
 int main()
 {
-    funcx();
     return 0;
 }

@@ -1,108 +1,99 @@
-#define READER_THREAD_COUNT 8
-#define LOOP_COUNT 5000000
-
 #include <iostream>
-#include <mutex>
-#include <shared_mutex>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <list>
 
 using namespace std;
 
-class shared_mutex_counter
+class Task
 {
 public:
-    shared_mutex_counter() = default;
 
-    ~shared_mutex_counter() = default;
-
-    unsigned int get() const
+    Task(int taskID)
     {
-        shared_lock<shared_mutex> lock(mutex_);
-        return value_;
+        this->taskID = taskID;
     }
 
-    void inscrement()
+    void doTask()
     {
-        unique_lock<shared_mutex> lock(mutex_);
-        ++value_;
-    }
-
-    void reset()
-    {
-        unique_lock<shared_mutex> lock(mutex_);
-        value_ = 0;
+        cout << "handle a task, taskID: " << taskID << ", threadID: " << this_thread::get_id() << endl;
     }
 
 private:
-    mutable std::shared_mutex mutex_;
-    unsigned int value_ = 0;
+    int taskID;
 };
 
-class mutex_counter
+mutex mymutex;
+list<Task*> tasks;
+condition_variable mycv;
+
+void* consumer_thread()
 {
-    mutex_counter() = default;
-
-    ~mutex_counter() = default;
-
-    unsigned int get() const
+    Task* pTask = NULL;
+    while (true)
     {
-        shared_lock<mutex> lock(mutex_);
-        return value_;
+        unique_lock<mutex> guard(mymutex);
+        while (tasks.empty())
+        {
+            mycv.wait(guard);
+        }
+
+        pTask = tasks.front();
+        tasks.pop_front();
+
+        if (pTask == NULL)
+        {
+            continue;
+        }
+
+        pTask->doTask();
+        delete pTask;
+        pTask = NULL;
     }
 
-    void inscrement()
-    {
-        unique_lock<mutex> lock(mutex_);
-        ++value_;
-    }
+    return NULL;
+}
 
-    void reset()
-    {
-        unique_lock<mutex> lock(mutex_);
-        value_ = 0;
-    }
-
-private:
-    mutable std::mutex mutex_;
-    unsigned int value_ = 0;
-};
-
-void test_shared_mutex()
+void* producer_thread()
 {
-    shared_mutex_counter counter;
-    int temp;
+    int taskID = 0;
+    Task* pTask = NULL;
 
-    auto write = [&counter]() {
-        for (int i = 0; i < LOOP_COUNT; ++i)
-        {
-            counter.inscrement();
-        }
-    };
-
-    auto reader = [&counter, &temp]() {
-        for (int i = 0; i < LOOP_COUNT; ++i)
-        {
-            temp = counter.get();
-        }
-    };
-
-    thread** tarray = new thread*[READER_THREAD_COUNT];
-    clock_t start = clock();
-
-    for (int i = 0; i < READER_THREAD_COUNT; ++i)
+    while (true)
     {
-        tarray[i] = new thread(reader);
+        pTask = new Task(taskID);
+
+        {
+            lock_guard<mutex> guard(mymutex);
+            tasks.push_back(pTask);
+            cout << "produce a task, taskID = " << taskID << ", threadID: " << this_thread::get_id() << endl;
+        }
+
+        mycv.notify_one();
+        ++taskID;
+
+        this_thread::sleep_for(chrono::seconds(1));
     }
+    return NULL;
+}
 
-    thread tw(write);
+int main()
+{
+    thread consumer1(consumer_thread);
+    thread consumer2(consumer_thread);
+    thread consumer3(consumer_thread);
+    thread consumer4(consumer_thread);
+    thread consumer5(consumer_thread);
 
-    for (int i = 0; i < READER_THREAD_COUNT; ++i)
-    {
-        tarray[i]->join();
-    }
+    thread producer1(producer_thread);
 
-    tw.join();
+    producer1.join();
+    consumer1.join();
+    consumer2.join();
+    consumer3.join();
+    consumer4.join();
+    consumer5.join();
 
-    clock_t end = clock();
-
+    return 0;
 }

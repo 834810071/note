@@ -23,6 +23,17 @@ int main()
         return -1;
     }
 
+    struct sockaddr_in bindaddr;
+    bindaddr.sin_family = AF_INET;
+    bindaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    bindaddr.sin_port = htons(20000);
+
+    if (bind(clientfd, (struct sockaddr*)&bindaddr, sizeof bindaddr) == -1)
+    {
+        cout << "bind error." << endl;
+        return -1;
+    }
+
     struct sockaddr_in serveraddr;
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -51,7 +62,11 @@ int main()
     {
         cout << "recv data error." << endl;
     }
-    close(clientfd);
+   // close(clientfd);
+   while (true)
+   {
+       sleep(3);
+   }
 
     return 0;
 }

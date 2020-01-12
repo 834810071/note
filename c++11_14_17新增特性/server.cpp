@@ -9,6 +9,7 @@
 #include <cstring>
 #include <netinet/in.h>
 #include <zconf.h>
+#include <vector>
 
 using namespace std;
 
@@ -32,7 +33,7 @@ int main()
         return -1;
     }
 
-    if (listen(listenfd, INTMAX_MAX) == -1)
+    if (listen(listenfd, SOMAXCONN) == -1)
     {
         cout << "listen error." << endl;
         return -1;
@@ -42,6 +43,7 @@ int main()
     {
         struct sockaddr_in clientaddr;
         socklen_t clientaddrlen = sizeof clientaddr;
+        vector<int> clientfds;
         int clientfd = accept(listenfd, (struct sockaddr*)& clientaddr, &clientaddrlen);
         if (clientfd != -1)
         {
@@ -64,7 +66,8 @@ int main()
             {
                 cout << "recv data error." << endl;
             }
-            close(clientfd);
+            //close(clientfd);
+            clientfds.push_back(clientfd);
         };
     }
     close(listenfd);

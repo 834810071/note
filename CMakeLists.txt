@@ -17,3 +17,5 @@ add_subdirectory(高性能服务的基本结构)
 
 add_executable(main main.cpp)
 
+target_link_libraries(main pthread)
+

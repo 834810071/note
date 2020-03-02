@@ -22,4 +22,4 @@
 
 [高性能服务的基本结构](https://github.com/834810071/note/blob/master/%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84/%E7%9B%AE%E5%BD%95.md)
 
-[高性能服务的其他组件设计]()
+[高性能服务的其他组件设计](https://github.com/834810071/note/blob/master/%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%85%B6%E4%BB%96%E7%BB%84%E4%BB%B6%E8%AE%BE%E8%AE%A1/%E7%9B%AE%E5%BD%95.md)

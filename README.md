@@ -23,3 +23,5 @@
 [高性能服务的基本结构](https://github.com/834810071/note/blob/master/%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84/%E7%9B%AE%E5%BD%95.md)
 
 [高性能服务的其他组件设计](https://github.com/834810071/note/blob/master/%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%85%B6%E4%BB%96%E7%BB%84%E4%BB%B6%E8%AE%BE%E8%AE%A1/%E7%9B%AE%E5%BD%95.md)
+
+[C++ 多线程编程精髓专题介绍](https://github.com/834810071/note/blob/master/C%2B%2B%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%BC%96%E7%A8%8B%E7%B2%BE%E9%AB%93%E4%B8%93%E9%A2%98%E4%BB%8B%E7%BB%8D/%E7%9B%AE%E5%BD%95.md)
